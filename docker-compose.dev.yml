@@ -1,0 +1,50 @@
+version: "3.8"
+
+services:
+
+  mysqldb:
+    container_name: mysqldb
+    image: mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: clinicals
+    networks:
+      springboot-mysql-net:
+    ports:
+      - 3307:3036
+ 
+
+
+  springboot-restful-webservices:
+    container_name: springboot-webservices
+    build:
+      context: ./clinicaldata
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    depends_on:
+      - mysqldb
+    networks:
+      springboot-mysql-net:
+    restart: on-failure
+    environment:
+      - SPRING.DATASOURCE.URL= jdbc:mysql://mysqldb:3306/clinicals
+      - SPRING.DATASOURCE.USERNAME=root
+      - SPRING.DATASOURCE.PASSWORD=root
+  
+  clinicalsapp:
+    container_name: app-dev
+    image: app-dev
+    build:
+      context: ./clinicalsapp
+    volumes:
+      - ./clinicalsapp:/app
+    ports:
+      - 3000:3000
+    depends_on:
+      - springboot-restful-webservices
+    networks:
+      springboot-mysql-net:
+
+networks:
+  springboot-mysql-net:
